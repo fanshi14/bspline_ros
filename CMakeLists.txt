@@ -8,6 +8,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   std_msgs
+  geometry_msgs
 )
 set(CMAKE_CXX_FLAGS "-std=c++11")
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
@@ -131,6 +132,19 @@ include_directories(
 #   src/${PROJECT_NAME}/tinyspline_ros.cpp
 # )
 
+set(LINK_LIBS
+  ${TINYSPLINE_LIBRARIES}
+  ${catkin_LIBRARIE}
+)
+
+add_library(${PROJECT_NAME} src/bsplineGenerate.cpp)
+target_link_libraries(${PROJECT_NAME}
+  LINK_PUBLIC tinysplinecpp
+  ${LINK_LIBS}
+)
+#add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}_gencfg)
+
+
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
@@ -146,10 +160,7 @@ add_executable(tinyspline_ros_node src/tinyspline_ros_node.cpp)
 ## Specify libraries to link a library or executable target against
 target_link_libraries(tinyspline_ros_node
   LINK_PUBLIC tinysplinecpp
-  #LINK_PUBLIC tinysplinecpp_static
-  #libtinyspline
-  ${TINYSPLINE_LIBRARIES}
-  ${catkin_LIBRARIES}
+  ${LINK_LIBS}
   )
 set_target_properties(tinyspline_ros_node PROPERTIES FOLDER "src")
 
