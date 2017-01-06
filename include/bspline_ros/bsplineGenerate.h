@@ -15,6 +15,8 @@ public:
   int m_n_control_pts;
   int m_deg;
   nav_msgs::Path m_spline_path;
+  bool isTsNone;
+  float m_t0, m_tn;
 
   ros::NodeHandle m_nh;
   ros::Subscriber m_sub_path_grid_points;
