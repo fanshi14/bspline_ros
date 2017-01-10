@@ -19,6 +19,11 @@ void bsplineGenerate::pathGridPointsCallback(const geometry_msgs::PolygonStamped
   std::cout << "Input control points number: " << m_n_controlpts << "\n";
   // degree = 3, 3d cubic spline, number of control points
   delete m_spline_ptr;
+  if (m_n_controlpts > 5)
+    m_deg = 5;
+  else
+    m_deg = 3;
+
   if (isTsNone)
     m_spline_ptr = new ts::BSpline(m_deg, 3, m_n_controlpts, TS_NONE);
   else{
