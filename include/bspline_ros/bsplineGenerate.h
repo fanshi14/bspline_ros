@@ -12,7 +12,7 @@ public:
   ts::BSpline* m_spline_ptr;
   std::vector<ts::rational> m_controlpts;
   std::vector<ts::rational> m_knotpts;
-  int m_n_control_pts;
+  int m_n_controlpts;
   int m_deg;
   nav_msgs::Path m_spline_path;
   bool isTsNone;
@@ -25,4 +25,5 @@ public:
   void onInit();
   void pathGridPointsCallback(const geometry_msgs::PolygonStampedConstPtr& msg);
   void splinePathDisplay();
+  void completeControlPoints();
 };
