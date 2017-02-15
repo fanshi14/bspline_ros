@@ -7,7 +7,7 @@ void bsplineGenerate::onInit()
 
   m_deg = 3;
   isTsNone = false;
-  m_spline_ptr = new ts::BSpline(3, 3, 7, TS_NONE);
+  m_spline_ptr = new ts::BSpline(m_deg, 3, 4, TS_CLAMPED);
 }
 
 void bsplineGenerate::pathGridPointsCallback(const geometry_msgs::PolygonStampedConstPtr& msg)
@@ -21,11 +21,14 @@ void bsplineGenerate::pathGridPointsCallback(const geometry_msgs::PolygonStamped
   delete m_spline_ptr;
   if (m_n_controlpts > 5)
     m_deg = 5;
-  else
-    m_deg = 3;
+  else if (m_n_controlpts >= 2)
+    m_deg = m_n_controlpts - 1;
 
   if (isTsNone)
-    m_spline_ptr = new ts::BSpline(m_deg, 3, m_n_controlpts, TS_NONE);
+    m_spline_ptr = new ts::BSpline(m_deg, // degree = order - 1
+                                   3, // dim of the data
+                                   m_n_controlpts, // control points >= degree+1
+                                   TS_NONE);
   else{
     if (m_n_controlpts <= m_deg)
       m_spline_ptr = new ts::BSpline(m_deg, 3, m_deg+1, TS_CLAMPED);
@@ -53,8 +56,8 @@ void bsplineGenerate::pathGridPointsCallback(const geometry_msgs::PolygonStamped
     m_controlpts[3*i+2] = msg->polygon.points[2*i+1].z;
   }
 
-  if (m_n_controlpts <= m_deg)
-    completeControlPoints();
+  // if (m_n_controlpts <= m_deg)
+  //   completeControlPoints();
 
   m_spline_ptr->setCtrlp(m_controlpts);
 
@@ -82,7 +85,7 @@ void bsplineGenerate::splinePathDisplay()
 
   //ts::BSpline beziers = m_spline_ptr->derive().toBeziers();
 
-  for (int i = 0; i < n_sample; ++i){
+  for (int i = 0; i <= n_sample; ++i){
     std::vector<ts::rational> result = m_spline_ptr->evaluate(i*sample_gap).result();
     pose_stamped.pose.position.x = result[0];
     pose_stamped.pose.position.y = result[1];
