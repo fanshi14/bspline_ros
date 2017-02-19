@@ -2,12 +2,14 @@
 
 void bsplineGenerate::onInit()
 {
+  ros::NodeHandle private_nh("~");
+  private_nh.param("spline_degree", m_default_deg, 3);
+
   m_sub_path_grid_points = m_nh.subscribe<geometry_msgs::PolygonStamped>("/path_gird_points", 1, &bsplineGenerate::pathGridPointsCallback, this);
   m_pub_spline_path = m_nh.advertise<nav_msgs::Path>("spline_path", 1);
 
-  m_deg = 3;
   isTsNone = false;
-  m_spline_ptr = new ts::BSpline(m_deg, 3, 4, TS_CLAMPED);
+  m_spline_ptr = new ts::BSpline(m_default_deg, 3, m_default_deg+1, TS_CLAMPED);
 }
 
 void bsplineGenerate::pathGridPointsCallback(const geometry_msgs::PolygonStampedConstPtr& msg)
@@ -17,12 +19,15 @@ void bsplineGenerate::pathGridPointsCallback(const geometry_msgs::PolygonStamped
 
   m_n_controlpts = msg->polygon.points.size() / 2;
   std::cout << "Input control points number: " << m_n_controlpts << "\n";
-  // degree = 3, 3d cubic spline, number of control points
   delete m_spline_ptr;
-  if (m_n_controlpts > 5)
-    m_deg = 5;
-  else if (m_n_controlpts >= 2)
+
+  m_deg = m_default_deg;
+  if (m_n_controlpts <= m_deg){
+    ROS_WARN("Control points is NOT larger than degree!");
+    std::cout << "Control point num: " << m_n_controlpts << ", degree: "
+              << m_deg << "\n";
     m_deg = m_n_controlpts - 1;
+  }
 
   if (isTsNone)
     m_spline_ptr = new ts::BSpline(m_deg, // degree = order - 1

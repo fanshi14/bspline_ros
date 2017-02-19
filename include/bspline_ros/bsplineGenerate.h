@@ -13,6 +13,7 @@ public:
   std::vector<ts::rational> m_controlpts;
   std::vector<ts::rational> m_knotpts;
   int m_n_controlpts;
+  int m_default_deg;
   int m_deg;
   nav_msgs::Path m_spline_path;
   bool isTsNone;

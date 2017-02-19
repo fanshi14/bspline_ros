@@ -1,0 +1,5 @@
+<launch>
+  <node pkg="bspline_ros" type="tinyspline_ros_node" name="bspline_server" output="screen">
+    <param name="spline_degree" value="3" />
+  </node>
+</launch>
