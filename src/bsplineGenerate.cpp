@@ -12,7 +12,22 @@ void bsplineGenerate::onInit()
   m_spline_ptr = new ts::BSpline(m_default_deg, 3, m_default_deg+1, TS_CLAMPED);
 }
 
+
+void bsplineGenerate::onInit(int degree, bool isTsNone, std::string spline_path_pub_topic_name)
+{
+  m_default_deg = degree;
+  m_is_TsNone = isTsNone;
+  m_pub_spline_path = m_nh.advertise<nav_msgs::Path>(spline_path_pub_topic_name, 1);
+  m_spline_ptr = new ts::BSpline(m_default_deg, 3, m_default_deg+1, TS_CLAMPED);
+}
+
 void bsplineGenerate::pathGridPointsCallback(const geometry_msgs::PolygonStampedConstPtr& msg)
+{
+  geometry_msgs::PolygonStamped msg_data = *msg;
+  bsplineParamInput(&msg_data);
+}
+
+void bsplineGenerate::bsplineParamInput(geometry_msgs::PolygonStamped* msg)
 {
   /* Init */
   delete m_spline_ptr;
@@ -70,12 +85,13 @@ void bsplineGenerate::pathGridPointsCallback(const geometry_msgs::PolygonStamped
 
   m_spline_ptr->setCtrlp(m_controlpts);
 
-  m_spline_path.header = msg->header;
   splinePathDisplay();
 }
 
 void bsplineGenerate::splinePathDisplay()
 {
+  m_spline_path.header.frame_id = std::string("/world");
+  m_spline_path.header.stamp = ros::Time().now();
   float sample_gap = 0.02f;
   m_spline_path.poses.clear();
   int n_sample;
@@ -100,4 +116,14 @@ void bsplineGenerate::splinePathDisplay()
     m_spline_path.poses.push_back(pose_stamped);
   }
   m_pub_spline_path.publish(m_spline_path);
+}
+
+std::vector<double> bsplineGenerate::evaluate(double t)
+{
+  std::vector<ts::rational> result = m_spline_ptr->evaluate(t).result();
+  std::vector<double> res_d;
+  res_d.push_back(result[0]);
+  res_d.push_back(result[1]);
+  res_d.push_back(result[2]);
+  return res_d;
 }

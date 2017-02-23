@@ -24,7 +24,11 @@ public:
   ros::Subscriber m_sub_path_grid_points;
   ros::Publisher m_pub_spline_path;
 
+  /* onInit() for tinyspline_ros_node or bsplineGenerateLibrary. */
   void onInit();
+  void onInit(int degree, bool isTsNone, std::string spline_path_pub_topic_name);
   void pathGridPointsCallback(const geometry_msgs::PolygonStampedConstPtr& msg);
   void splinePathDisplay();
+  void bsplineParamInput(geometry_msgs::PolygonStamped* msg);
+  std::vector<double> evaluate(double t);
 };
