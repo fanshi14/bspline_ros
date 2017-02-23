@@ -13,10 +13,11 @@ public:
   std::vector<ts::rational> m_controlpts;
   std::vector<ts::rational> m_knotpts;
   int m_n_controlpts;
+  int m_n_knots;
   int m_default_deg;
   int m_deg;
   nav_msgs::Path m_spline_path;
-  bool isTsNone;
+  bool m_is_TsNone;
   float m_t0, m_tn;
 
   ros::NodeHandle m_nh;
@@ -26,5 +27,4 @@ public:
   void onInit();
   void pathGridPointsCallback(const geometry_msgs::PolygonStampedConstPtr& msg);
   void splinePathDisplay();
-  void completeControlPoints();
 };
