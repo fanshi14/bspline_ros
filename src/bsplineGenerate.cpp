@@ -118,9 +118,24 @@ void bsplineGenerate::splinePathDisplay()
   m_pub_spline_path.publish(m_spline_path);
 }
 
+void bsplineGenerate::getDerive()
+{
+  m_spline_derive = m_spline_ptr->derive();
+}
+
 std::vector<double> bsplineGenerate::evaluate(double t)
 {
   std::vector<ts::rational> result = m_spline_ptr->evaluate(t).result();
+  std::vector<double> res_d;
+  res_d.push_back(result[0]);
+  res_d.push_back(result[1]);
+  res_d.push_back(result[2]);
+  return res_d;
+}
+
+std::vector<double> bsplineGenerate::evaluateDerive(double t)
+{
+  std::vector<ts::rational> result = m_spline_derive.evaluate(t).result();
   std::vector<double> res_d;
   res_d.push_back(result[0]);
   res_d.push_back(result[1]);

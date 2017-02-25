@@ -10,6 +10,7 @@ class bsplineGenerate
 {
 public:
   ts::BSpline* m_spline_ptr;
+  ts::BSpline m_spline_derive;
   std::vector<ts::rational> m_controlpts;
   std::vector<ts::rational> m_knotpts;
   int m_n_controlpts;
@@ -30,5 +31,7 @@ public:
   void pathGridPointsCallback(const geometry_msgs::PolygonStampedConstPtr& msg);
   void splinePathDisplay();
   void bsplineParamInput(geometry_msgs::PolygonStamped* msg);
+  void getDerive();
   std::vector<double> evaluate(double t);
+  std::vector<double> evaluateDerive(double t);
 };
