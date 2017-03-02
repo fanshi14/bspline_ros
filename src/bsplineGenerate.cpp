@@ -86,6 +86,7 @@ void bsplineGenerate::bsplineParamInput(geometry_msgs::PolygonStamped* msg)
   m_spline_ptr->setCtrlp(m_controlpts);
 
   splinePathDisplay();
+  // std::cout << "Spline display finished.\n";
 }
 
 void bsplineGenerate::splinePathDisplay()
