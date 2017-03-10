@@ -35,7 +35,7 @@ void bsplineGenerate::bsplineParamInput(geometry_msgs::PolygonStamped* msg)
 
   m_n_controlpts = msg->polygon.points.size() / 2;
   m_n_knots = m_n_controlpts + m_deg + 1;
-  std::cout << "B-spline input control points number: " << m_n_controlpts << "\n";
+  //std::cout << "B-spline input control points number: " << m_n_controlpts << "\n";
   if (m_n_controlpts <= m_deg){
     ROS_WARN("Control points is LESS than degree!");
     std::cout << "Control point num: " << m_n_controlpts << ", degree: "
@@ -54,7 +54,7 @@ void bsplineGenerate::bsplineParamInput(geometry_msgs::PolygonStamped* msg)
   m_t0 = msg->polygon.points[0].x;
   //m_tn = msg->polygon.points[2*(m_n_controlpts-m_deg-1)].x;
   m_tn = msg->polygon.points[2*(m_n_controlpts-m_deg)].x;
-  std::cout << "Time region: ["<< m_t0 << ", " << m_tn << "]\n";
+  // std::cout << "Time region: ["<< m_t0 << ", " << m_tn << "]\n";
 
   if (m_is_TsNone){
     /* Manually set knots value if TsNone */
