@@ -1,5 +1,0 @@
-if (NOT EXISTS ${CMAKE_CURRENT_BINARY_DIR}/tinyspline)
-  execute_process(COMMAND git clone git@github.com:KahnShi/tinyspline.git ${CMAKE_CURRENT_BINARY_DIR}/tinyspline)
-  execute_process(COMMAND sed -i -e "s/tinyspline\ STATIC/tinyspline\ SHARED/g" ${CMAKE_CURRENT_BINARY_DIR}/tinyspline/CMakeLists.txt)
-  execute_process(COMMAND cmake -E chdir ${CMAKE_CURRENT_BINARY_DIR}/tinyspline make)
-endif()

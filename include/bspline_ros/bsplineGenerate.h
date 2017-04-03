@@ -1,4 +1,6 @@
 #include <iostream>
+/*we need set the following flag to disable c++11 for linking the tinyspline */
+#define TINYSPLINE_DISABLE_CXX11_FEATURES
 #include <tinysplinecpp.h>
 #include <ros/ros.h>
 #include <geometry_msgs/Point32.h>
