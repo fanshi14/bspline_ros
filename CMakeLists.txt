@@ -12,7 +12,6 @@ set(PACKAGE_DEPENDENCIES
 find_package(catkin REQUIRED COMPONENTS
   ${PACKAGE_DEPENDENCIES}
 )
-set(CMAKE_CXX_FLAGS "-std=c++11")
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 include(cmake/DownloadTinyspline.cmake)
