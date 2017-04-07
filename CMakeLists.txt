@@ -16,7 +16,7 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 include(cmake/DownloadTinyspline.cmake)
 tinyspline_build(TINYSPLINE_LIBS TINYSPLINE_INCLUDE_DIR)
-include_directories(include ${TINYSPLINE_INCLUDE_DIR})
+include_directories(include ${catkin_INCLUDE_DIRS} ${TINYSPLINE_INCLUDE_DIR})
 
 add_definitions("${TINYSPLINE_DEFINITIONS}")
 
@@ -24,7 +24,6 @@ catkin_package(
   INCLUDE_DIRS include ${TINYSPLINE_INCLUDE_DIR}
   LIBRARIES ${PROJECT_NAME} ${TINYSPLINE_LIBS}
   CATKIN_DEPENDS ${PACKAGE_DEPENDENCIES}
-  DEPENDS system_lib
 )
 
 ###########
