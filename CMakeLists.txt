@@ -30,8 +30,11 @@ catkin_package(
 ## Build ##
 ###########
 
-add_library(${PROJECT_NAME} src/bsplineGenerate.cpp)
+add_library(${PROJECT_NAME} src/bsplineGenerate.cpp src/bsplineUpdateOrder.cpp)
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${TINYSPLINE_LIBS})
 
 add_executable(tinyspline_ros_node src/tinyspline_ros_node.cpp)
 target_link_libraries(tinyspline_ros_node ${PROJECT_NAME}   ${catkin_LIBRARIES} ${TINYSPLINE_LIBS})
+
+add_executable(update_spline_test_node src/update_spline_test_node.cpp)
+target_link_libraries(update_spline_test_node ${PROJECT_NAME}   ${catkin_LIBRARIES} ${TINYSPLINE_LIBS})
