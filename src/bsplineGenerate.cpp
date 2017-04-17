@@ -9,7 +9,7 @@ void bsplineGenerate::onInit()
   m_sub_path_grid_points = m_nh.subscribe<geometry_msgs::PolygonStamped>("/path_gird_points", 1, &bsplineGenerate::pathGridPointsCallback, this);
   m_pub_spline_path = m_nh.advertise<nav_msgs::Path>("spline_path", 1);
 
-  m_spline_ptr = new ts::BSpline(m_default_deg, 3, m_default_deg+1, TS_CLAMPED);
+  m_spline_ptr = new tinyspline::BSpline(m_default_deg, 3, m_default_deg+1, TS_CLAMPED);
 }
 
 
@@ -18,7 +18,7 @@ void bsplineGenerate::onInit(int degree, bool isTsNone, std::string spline_path_
   m_default_deg = degree;
   m_is_TsNone = isTsNone;
   m_pub_spline_path = m_nh.advertise<nav_msgs::Path>(spline_path_pub_topic_name, 1);
-  m_spline_ptr = new ts::BSpline(m_default_deg, 3, m_default_deg+1, TS_CLAMPED);
+  m_spline_ptr = new tinyspline::BSpline(m_default_deg, 3, m_default_deg+1, TS_CLAMPED);
 }
 
 void bsplineGenerate::pathGridPointsCallback(const geometry_msgs::PolygonStampedConstPtr& msg)
@@ -44,12 +44,12 @@ void bsplineGenerate::bsplineParamInput(geometry_msgs::PolygonStamped* msg)
   }
 
   if (m_is_TsNone)
-    m_spline_ptr = new ts::BSpline(m_deg, // degree = order - 1
+    m_spline_ptr = new tinyspline::BSpline(m_deg, // degree = order - 1
                                    3, // dim of the data
                                    m_n_controlpts, // control points >= degree+1
                                    TS_NONE);
   else
-    m_spline_ptr = new ts::BSpline(m_deg, 3, m_n_controlpts, TS_CLAMPED);
+    m_spline_ptr = new tinyspline::BSpline(m_deg, 3, m_n_controlpts, TS_CLAMPED);
 
   m_t0 = msg->polygon.points[0].x;
   //m_tn = msg->polygon.points[2*(m_n_controlpts-m_deg-1)].x;
@@ -107,10 +107,10 @@ void bsplineGenerate::splinePathDisplay()
   pose_stamped.pose.orientation.z = 0.0f;
   pose_stamped.pose.orientation.w = 1.0f;
 
-  //ts::BSpline beziers = m_spline_ptr->derive().toBeziers();
+  //tinyspline::BSpline beziers = m_spline_ptr->derive().toBeziers();
 
   for (int i = 0; i <= n_sample; ++i){
-    std::vector<ts::rational> result = m_spline_ptr->evaluate(i*sample_gap).result();
+    std::vector<tinyspline::rational> result = m_spline_ptr->evaluate(i*sample_gap).result();
     pose_stamped.pose.position.x = result[0];
     pose_stamped.pose.position.y = result[1];
     pose_stamped.pose.position.z = result[2];
@@ -126,7 +126,7 @@ void bsplineGenerate::getDerive()
 
 std::vector<double> bsplineGenerate::evaluate(double t)
 {
-  std::vector<ts::rational> result = m_spline_ptr->evaluate(t).result();
+  std::vector<tinyspline::rational> result = m_spline_ptr->evaluate(t).result();
   std::vector<double> res_d;
   res_d.push_back(result[0]);
   res_d.push_back(result[1]);
@@ -136,7 +136,7 @@ std::vector<double> bsplineGenerate::evaluate(double t)
 
 std::vector<double> bsplineGenerate::evaluateDerive(double t)
 {
-  std::vector<ts::rational> result = m_spline_derive.evaluate(t).result();
+  std::vector<tinyspline::rational> result = m_spline_derive.evaluate(t).result();
   std::vector<double> res_d;
   res_d.push_back(result[0]);
   res_d.push_back(result[1]);

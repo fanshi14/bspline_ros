@@ -11,10 +11,10 @@
 class bsplineGenerate
 {
 public:
-  ts::BSpline* m_spline_ptr;
-  ts::BSpline m_spline_derive;
-  std::vector<ts::rational> m_controlpts;
-  std::vector<ts::rational> m_knotpts;
+  tinyspline::BSpline* m_spline_ptr;
+  tinyspline::BSpline m_spline_derive;
+  std::vector<tinyspline::rational> m_controlpts;
+  std::vector<tinyspline::rational> m_knotpts;
   int m_n_controlpts;
   int m_n_knots;
   int m_default_deg;
