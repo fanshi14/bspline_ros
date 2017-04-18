@@ -61,7 +61,7 @@ Visualization Manager:
       Line Width: 0.0299999993
       Name: Path
       Offset:
-        X: 0
+        X: 20
         Y: 0
         Z: 0
       Pose Style: None
@@ -125,11 +125,11 @@ Visualization Manager:
         Value: false
       Name: Current View
       Near Clip Distance: 0.00999999978
-      Scale: 9.22516441
+      Scale: 3.67576623
       Target Frame: <Fixed Frame>
       Value: TopDownOrtho (rviz)
-      X: 3.43655419
-      Y: -1.79605174
+      X: -6.96969748
+      Y: -19.6536102
     Saved: ~
 Window Geometry:
   Displays:
