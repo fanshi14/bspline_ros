@@ -13,7 +13,7 @@ void updateSplineTestCallback(const std_msgs::Empty msg)
   spline.onInit();
   while (1){
     geometry_msgs::PolygonStamped* polygon_ptr = new geometry_msgs::PolygonStamped();
-    int n_ctrl_pts = 8;
+    int n_ctrl_pts = 10;
     double end_time;
     end_time = 1.0 * (n_ctrl_pts - 2);
     std::vector<double> ctrl_pts;
@@ -30,9 +30,12 @@ void updateSplineTestCallback(const std_msgs::Empty msg)
     double max_vel = 10.0, max_acc = 3.0;
     srand (time(NULL));
     double cur_vel = rand() / (double)RAND_MAX * max_vel / 2.0;
+    //test maximun
+    //cur_vel = max_vel / 2.0;
+    
     double cur_ang = rand() / (double)RAND_MAX * 2.0 * PI;
     ctrl_pts.push_back(cur_vel * cos(cur_ang)); ctrl_pts.push_back(cur_vel * sin(cur_ang)); ctrl_pts.push_back(0.0);
-    for (int i = 2; i <= 7; ++i){
+    for (int i = 2; i <= n_ctrl_pts-1; ++i){
       double center_x, center_y, start_x, start_y;
       start_x = ctrl_pts[3*(i-1)];
       start_y = ctrl_pts[3*(i-1)+1];
@@ -40,12 +43,15 @@ void updateSplineTestCallback(const std_msgs::Empty msg)
       center_y = 2.0*ctrl_pts[3*(i-1)+1] - ctrl_pts[3*(i-2)+1];
       while (1){
 	double delta_vel = rand() / (double)RAND_MAX * max_acc;
+	//test maximun
+	//delta_vel = max_acc;
+	
         cur_ang = rand() / (double)RAND_MAX * 2.0 * PI;
 	double cur_x, cur_y;
 	cur_x = delta_vel * cos(cur_ang) + center_x;
 	cur_y = delta_vel * sin(cur_ang) + center_y;
 	if (pow(cur_x - start_x, 2.0) + pow(cur_y - start_y, 2.0) < pow(max_vel, 2.0)){
-	  if (i == 7){
+	  if (i == n_ctrl_pts-1){
 	    ctrl_pts.push_back((cur_x + start_x) / 2.0); ctrl_pts.push_back((cur_y + start_y) / 2.0); ctrl_pts.push_back(0.0);
 	  }
 	  else{
@@ -73,26 +79,26 @@ void updateSplineTestCallback(const std_msgs::Empty msg)
     spline.getUpdateSplineDerive();
 
     // test
-    // std::vector<double> temp = spline.evaluateDerive(6.0);
+    // std::vector<double> temp = spline.evaluateDerive(0.0);
     // std::cout << temp[0] << ", " << temp[1] << "\n";
-    // temp = spline.evaluateUpdateSpline(6.0, 1);
+    // temp = spline.evaluateUpdateSpline(0.0, 1);
     // std::cout << temp[0] << ", " << temp[1] << "\n\n";
     
-    for (int i = 0; i <= 30; ++i){
-      std::vector<double> vel = spline.evaluateUpdateSpline(6.0 / 30 * i, 1);
-      std::vector<double> acc = spline.evaluateUpdateSpline(6.0 / 30 * i, 2);
+    bool is_vel_flag = false;
+    for (int i = 0; i <= (int)((n_ctrl_pts-2)/0.2); ++i){
+      std::vector<double> vel = spline.evaluateUpdateSpline(0.2 * i, 1);
+      std::vector<double> acc = spline.evaluateUpdateSpline(0.2 * i, 2);
 
       // examine velocity
-      bool is_vel_flag = false;
       if (pow(vel[0], 2.0) + pow(vel[1], 2.0) > pow(max_vel, 2.0) + 0.2){
 	if (!is_vel_flag){ // Only output one time for same bspline function
 	  ROS_ERROR("Velocity is over upperbound.");
 	  is_vel_flag = true;
 	}
-	std::cout << 6.0 / 30 * i << ": " << vel[0] << ", " << vel[1] << ". " << sqrt(pow(vel[0], 2.0) + pow(vel[1], 2.0)) << "\n";
-	std::vector<double> origin_vel = spline.evaluateOriginSpline(6.0 / 30 * i, 1);
+	std::cout << 0.2 * i << ": " << vel[0] << ", " << vel[1] << ". " << sqrt(pow(vel[0], 2.0) + pow(vel[1], 2.0)) << "\n";
+	std::vector<double> origin_vel = spline.evaluateOriginSpline(0.2 * i, 1);
 	std::cout << "Origin: " <<  origin_vel[0] << ", " << origin_vel[1] << ". " << sqrt(pow(origin_vel[0], 2.0) + pow(origin_vel[1], 2.0)) << "\n";
-	for (int j = 0; j < 24; ++j){
+	for (int j = 0; j < 3*n_ctrl_pts; ++j){
 	  std::cout << ctrl_pts[j] << ", ";
 	}
 	std::cout << "\n\n";
