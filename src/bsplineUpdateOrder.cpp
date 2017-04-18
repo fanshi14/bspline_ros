@@ -98,16 +98,19 @@ bool bsplineUpdateOrder::bsplineUpdateParamInput()
   std::vector<tinyspline::rational> update_knotpts;
   int n_update_knots = m_n_controlpts + m_update_deg + 1;
   update_knotpts = m_spline_update_ptr->knots();
+
+  double start_polygon_time = (m_tn - m_t0) / (m_n_controlpts-m_origin_deg) * m_update_deg / 2.0;
+  /* Keep start and end velocity guarantee the requirements, and total time do not change [m_t0, m_tn] */
   for (int i = 0; i <= m_update_deg; ++i){
     update_knotpts[i] = m_t0;
     update_knotpts[n_update_knots-1-i] = m_tn;
   }
-  update_knotpts[1+m_update_deg] = m_t0 + (m_tn - m_t0) / (m_n_controlpts-m_origin_deg) * m_update_deg / 2.0;
-  update_knotpts[n_update_knots-2-m_update_deg] = m_tn - (m_tn - m_t0) / (m_n_controlpts-m_origin_deg) * m_update_deg / 2.0;
+  update_knotpts[1+m_update_deg] = m_t0 + start_polygon_time;
+  update_knotpts[n_update_knots-2-m_update_deg] = m_tn - start_polygon_time;
   for (int i = 2; i <= m_n_controlpts-2-m_update_deg; ++i)
     update_knotpts[i+m_update_deg] = (update_knotpts[n_update_knots-2-m_update_deg] - update_knotpts[1+m_update_deg]) *i / (m_n_controlpts-m_update_deg-2);
+  
   m_spline_update_ptr->setKnots(update_knotpts);
-    
   m_spline_update_ptr->setCtrlp(m_controlpts);
   updateSplinePathDisplay();
   return true;
