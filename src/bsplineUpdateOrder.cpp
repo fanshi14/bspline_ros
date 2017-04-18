@@ -11,8 +11,8 @@ void bsplineUpdateOrder::onInit()
   m_pub_spline_origin_path = m_nh.advertise<nav_msgs::Path>("spline_path", 1);
   m_pub_spline_update_path = m_nh.advertise<nav_msgs::Path>("spline_update_path", 1);
 
-  m_spline_origin_ptr = new ts::BSpline(m_origin_deg, 3, m_origin_deg+1, TS_CLAMPED);
-  m_spline_update_ptr = new ts::BSpline(m_update_deg, 3, m_update_deg+1, TS_CLAMPED);
+  m_spline_origin_ptr = new tinyspline::BSpline(m_origin_deg, 3, m_origin_deg+1, TS_CLAMPED);
+  m_spline_update_ptr = new tinyspline::BSpline(m_update_deg, 3, m_update_deg+1, TS_CLAMPED);
 }
 
 void bsplineUpdateOrder::pathGridPointsCallback(const geometry_msgs::PolygonStampedConstPtr& msg)
@@ -37,12 +37,12 @@ bool bsplineUpdateOrder::bsplineParamInput(geometry_msgs::PolygonStamped* msg)
   }
 
   if (m_is_TsNone)
-    m_spline_origin_ptr = new ts::BSpline(m_origin_deg, // degree = order - 1
+    m_spline_origin_ptr = new tinyspline::BSpline(m_origin_deg, // degree = order - 1
                                    3, // dim of the data
                                    m_n_controlpts, // control points >= degree+1
                                    TS_NONE);
   else
-    m_spline_origin_ptr = new ts::BSpline(m_origin_deg, 3, m_n_controlpts, TS_CLAMPED);
+    m_spline_origin_ptr = new tinyspline::BSpline(m_origin_deg, 3, m_n_controlpts, TS_CLAMPED);
 
   if (m_is_TsNone){
     m_t0 = msg->polygon.points[0].x;
@@ -92,10 +92,10 @@ bool bsplineUpdateOrder::bsplineUpdateParamInput()
     return false;
   }
 
-  m_spline_update_ptr = new ts::BSpline(m_update_deg, 3, m_n_controlpts, TS_NONE);
+  m_spline_update_ptr = new tinyspline::BSpline(m_update_deg, 3, m_n_controlpts, TS_NONE);
 
   /* Updated spline knots will be changed, so we manually set knots value in clamped way */
-  std::vector<ts::rational> update_knotpts;
+  std::vector<tinyspline::rational> update_knotpts;
   int n_update_knots = m_n_controlpts + m_update_deg + 1;
   update_knotpts = m_spline_update_ptr->knots();
   for (int i = 0; i <= m_update_deg; ++i){
@@ -132,7 +132,7 @@ void bsplineUpdateOrder::originSplinePathDisplay()
   pose_stamped.pose.orientation.w = 1.0f;
 
   for (int i = 0; i <= n_sample; ++i){
-    std::vector<ts::rational> result = m_spline_origin_ptr->evaluate(i*sample_gap).result();
+    std::vector<tinyspline::rational> result = m_spline_origin_ptr->evaluate(i*sample_gap).result();
     pose_stamped.pose.position.x = result[0];
     pose_stamped.pose.position.y = result[1];
     pose_stamped.pose.position.z = result[2];
@@ -158,7 +158,7 @@ void bsplineUpdateOrder::updateSplinePathDisplay()
   pose_stamped.pose.orientation.w = 1.0f;
 
   for (int i = 0; i <= n_sample; ++i){
-    std::vector<ts::rational> result = m_spline_update_ptr->evaluate(i*sample_gap).result();
+    std::vector<tinyspline::rational> result = m_spline_update_ptr->evaluate(i*sample_gap).result();
     pose_stamped.pose.position.x = result[0];
     pose_stamped.pose.position.y = result[1];
     pose_stamped.pose.position.z = result[2];
@@ -175,7 +175,7 @@ void bsplineUpdateOrder::getDerive()
 
 std::vector<double> bsplineUpdateOrder::evaluate(double t)
 {
-  std::vector<ts::rational> result = m_spline_origin_ptr->evaluate(t).result();
+  std::vector<tinyspline::rational> result = m_spline_origin_ptr->evaluate(t).result();
   std::vector<double> res_d;
   res_d.push_back(result[0]);
   res_d.push_back(result[1]);
@@ -185,7 +185,7 @@ std::vector<double> bsplineUpdateOrder::evaluate(double t)
 
 std::vector<double> bsplineUpdateOrder::evaluateDerive(double t)
 {
-  std::vector<ts::rational> result = m_spline_origin_derive.evaluate(t).result();
+  std::vector<tinyspline::rational> result = m_spline_origin_derive.evaluate(t).result();
   std::vector<double> res_d;
   res_d.push_back(result[0]);
   res_d.push_back(result[1]);
@@ -201,7 +201,7 @@ void bsplineUpdateOrder::getUpdateSplineDerive()
 
 std::vector<double> bsplineUpdateOrder::evaluateUpdateSpline(double t, int order)
 {
-  std::vector<ts::rational> result;
+  std::vector<tinyspline::rational> result;
   if (order == 1)
     result = m_spline_update_derive.evaluate(t).result();
   else if (order == 2)
@@ -218,7 +218,7 @@ std::vector<double> bsplineUpdateOrder::evaluateUpdateSpline(double t, int order
 
 std::vector<double> bsplineUpdateOrder::evaluateOriginSpline(double t, int order)
 {
-  std::vector<ts::rational> result;
+  std::vector<tinyspline::rational> result;
   if (order == 1)
     result = m_spline_origin_derive.evaluate(t).result();
   else if (order == 2)
