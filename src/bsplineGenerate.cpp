@@ -27,6 +27,7 @@ void bsplineGenerate::onInit(int degree, bool isTsNone, std::string spline_path_
 
 void bsplineGenerate::pathGridPointsCallback(const geometry_msgs::PolygonStampedConstPtr& msg)
 {
+  ROS_INFO("\nReceive control points from topic.\n");
   geometry_msgs::PolygonStamped msg_data = *msg;
   bsplineParamInput(&msg_data);
 }
@@ -156,7 +157,7 @@ void bsplineGenerate::controlPolygonDisplay(int mode){
 
   line_list_marker.id = id_cnt;
   ++id_cnt;
-  line_list_marker.scale.x = 0.1;
+  line_list_marker.scale.x = 0.06;
   line_list_marker.color.r = 0.0;
   line_list_marker.color.g = 1.0;
   line_list_marker.color.b = 0.0;
@@ -189,9 +190,9 @@ void bsplineGenerate::controlPolygonDisplay(int mode){
     control_point_marker.pose.orientation.z = 0.0;
     control_point_marker.pose.orientation.w = 1.0;
     if (i == 0 || i == control_points_num-1){
-      control_point_marker.scale.x = 1.0;
-      control_point_marker.scale.y = 1.0;
-      control_point_marker.scale.z = 1.0;
+      control_point_marker.scale.x = 0.5;
+      control_point_marker.scale.y = 0.5;
+      control_point_marker.scale.z = 0.5;
       control_point_marker.color.a = 1;
       control_point_marker.color.r = 0.0f;
       control_point_marker.color.g = 1.0f;
@@ -199,9 +200,9 @@ void bsplineGenerate::controlPolygonDisplay(int mode){
       path_markers.markers.push_back(control_point_marker);
     }
     else{
-      control_point_marker.scale.x = 0.5;
-      control_point_marker.scale.y = 0.5;
-      control_point_marker.scale.z = 0.5;
+      control_point_marker.scale.x = 0.25;
+      control_point_marker.scale.y = 0.25;
+      control_point_marker.scale.z = 0.25;
       control_point_marker.color.a = 1;
       control_point_marker.color.r = 0.0f;
       control_point_marker.color.g = 1.0f;
