@@ -21,6 +21,7 @@ void bsplineGenerate::onInit(int degree, bool isTsNone, std::string spline_path_
   m_is_TsNone = isTsNone;
   m_pub_spline_path = m_nh.advertise<nav_msgs::Path>(spline_path_pub_topic_name, 1);
   m_pub_reconstructed_path_markers = m_nh.advertise<visualization_msgs::MarkerArray>("reconstructed_path_markers", 1);
+  m_first_display_flag = false;
   m_spline_ptr = new tinyspline::BSpline(m_default_deg, 3, m_default_deg+1, TS_CLAMPED);
 }
 
