@@ -3,10 +3,12 @@
 #define TINYSPLINE_DISABLE_CXX11_FEATURES
 #include <tinysplinecpp.h>
 #include <ros/ros.h>
-#include <geometry_msgs/Point32.h>
+#include <geometry_msgs/Point.h>
 #include <geometry_msgs/PolygonStamped.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <nav_msgs/Path.h>
+#include <visualization_msgs/Marker.h>
+#include <visualization_msgs/MarkerArray.h>
 
 class bsplineGenerate
 {
@@ -22,10 +24,12 @@ public:
   nav_msgs::Path m_spline_path;
   bool m_is_TsNone;
   float m_t0, m_tn;
+  bool m_first_display_flag;
 
   ros::NodeHandle m_nh;
   ros::Subscriber m_sub_path_grid_points;
   ros::Publisher m_pub_spline_path;
+  ros::Publisher m_pub_reconstructed_path_markers;
 
   /* onInit() for tinyspline_ros_node or bsplineGenerateLibrary. */
   void onInit();
@@ -36,4 +40,6 @@ public:
   void getDerive();
   std::vector<double> evaluate(double t);
   std::vector<double> evaluateDerive(double t);
+  void controlPolygonDisplay(int mode);
+  void arrayConvertToPoint(int id, geometry_msgs::Point& point);
 };

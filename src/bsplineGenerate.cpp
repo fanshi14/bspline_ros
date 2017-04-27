@@ -8,7 +8,9 @@ void bsplineGenerate::onInit()
 
   m_sub_path_grid_points = m_nh.subscribe<geometry_msgs::PolygonStamped>("/path_gird_points", 1, &bsplineGenerate::pathGridPointsCallback, this);
   m_pub_spline_path = m_nh.advertise<nav_msgs::Path>("spline_path", 1);
+  m_pub_reconstructed_path_markers = m_nh.advertise<visualization_msgs::MarkerArray>("reconstructed_path_markers", 1);
 
+  m_first_display_flag = false;
   m_spline_ptr = new tinyspline::BSpline(m_default_deg, 3, m_default_deg+1, TS_CLAMPED);
 }
 
@@ -18,6 +20,7 @@ void bsplineGenerate::onInit(int degree, bool isTsNone, std::string spline_path_
   m_default_deg = degree;
   m_is_TsNone = isTsNone;
   m_pub_spline_path = m_nh.advertise<nav_msgs::Path>(spline_path_pub_topic_name, 1);
+  m_pub_reconstructed_path_markers = m_nh.advertise<visualization_msgs::MarkerArray>("reconstructed_path_markers", 1);
   m_spline_ptr = new tinyspline::BSpline(m_default_deg, 3, m_default_deg+1, TS_CLAMPED);
 }
 
@@ -32,6 +35,12 @@ void bsplineGenerate::bsplineParamInput(geometry_msgs::PolygonStamped* msg)
   /* Init */
   delete m_spline_ptr;
   m_deg = m_default_deg;
+  //if (!m_controlpts.empty())
+  if (m_first_display_flag){
+    controlPolygonDisplay(0);
+  }
+  else
+    m_first_display_flag = true;
 
   m_n_controlpts = msg->polygon.points.size() / 2;
   m_n_knots = m_n_controlpts + m_deg + 1;
@@ -86,6 +95,7 @@ void bsplineGenerate::bsplineParamInput(geometry_msgs::PolygonStamped* msg)
   m_spline_ptr->setCtrlp(m_controlpts);
 
   splinePathDisplay();
+  controlPolygonDisplay(1);
   // std::cout << "Spline display finished.\n";
 }
 
@@ -119,6 +129,88 @@ void bsplineGenerate::splinePathDisplay()
   m_pub_spline_path.publish(m_spline_path);
 }
 
+void bsplineGenerate::controlPolygonDisplay(int mode){
+  int control_points_num = m_n_controlpts;
+  //std::cout << "[Display] Control points number: " << control_points_num << "\n";
+  int id_cnt = 0;
+  visualization_msgs::MarkerArray path_markers;
+  visualization_msgs::Marker control_point_marker, line_list_marker;
+  // line_array for display target ground truth future data, usually noted.
+  visualization_msgs::Marker line_array_target_gt_marker;
+  control_point_marker.ns = line_list_marker.ns = "control_polygon";
+  control_point_marker.header.frame_id = line_list_marker.header.frame_id = std::string("/world");
+  control_point_marker.header.stamp = line_list_marker.header.stamp = ros::Time().now();
+  if (mode == 1)
+    control_point_marker.action = line_list_marker.action = visualization_msgs::Marker::ADD;
+  else
+    control_point_marker.action = line_list_marker.action = visualization_msgs::Marker::DELETE;
+
+  line_array_target_gt_marker.header = line_list_marker.header;
+  line_array_target_gt_marker.action = line_list_marker.action;
+  line_array_target_gt_marker.ns = line_list_marker.ns;
+
+  control_point_marker.type = visualization_msgs::Marker::SPHERE;
+  line_list_marker.type = visualization_msgs::Marker::LINE_LIST;
+  line_array_target_gt_marker.type = visualization_msgs::Marker::LINE_STRIP;
+
+  line_list_marker.id = id_cnt;
+  ++id_cnt;
+  line_list_marker.scale.x = 0.1;
+  line_list_marker.color.r = 0.0;
+  line_list_marker.color.g = 1.0;
+  line_list_marker.color.b = 0.0;
+  line_list_marker.color.a = 1.0;
+  geometry_msgs::Point pt;
+  arrayConvertToPoint(0, pt);
+  line_list_marker.points.push_back(pt);
+  arrayConvertToPoint(1, pt);
+  line_list_marker.points.push_back(pt);
+  for (int i = 2; i < control_points_num; ++i){
+    arrayConvertToPoint(i-2, pt);
+    line_list_marker.points.push_back(pt);
+    arrayConvertToPoint(i, pt);
+    line_list_marker.points.push_back(pt);
+    arrayConvertToPoint(i-1, pt);
+    line_list_marker.points.push_back(pt);
+    arrayConvertToPoint(i, pt);
+    line_list_marker.points.push_back(pt);
+  }
+  path_markers.markers.push_back(line_list_marker);
+
+  for (int i = 0; i < control_points_num; ++i){
+    control_point_marker.id = id_cnt;
+    ++id_cnt;
+    control_point_marker.pose.position.x = m_controlpts[3*i];
+    control_point_marker.pose.position.y = m_controlpts[3*i+1];
+    control_point_marker.pose.position.z = m_controlpts[3*i+2];
+    control_point_marker.pose.orientation.x = 0.0;
+    control_point_marker.pose.orientation.y = 0.0;
+    control_point_marker.pose.orientation.z = 0.0;
+    control_point_marker.pose.orientation.w = 1.0;
+    if (i == 0 || i == control_points_num-1){
+      control_point_marker.scale.x = 1.0;
+      control_point_marker.scale.y = 1.0;
+      control_point_marker.scale.z = 1.0;
+      control_point_marker.color.a = 1;
+      control_point_marker.color.r = 0.0f;
+      control_point_marker.color.g = 1.0f;
+      control_point_marker.color.b = 0.0f;
+      path_markers.markers.push_back(control_point_marker);
+    }
+    else{
+      control_point_marker.scale.x = 0.5;
+      control_point_marker.scale.y = 0.5;
+      control_point_marker.scale.z = 0.5;
+      control_point_marker.color.a = 1;
+      control_point_marker.color.r = 0.0f;
+      control_point_marker.color.g = 1.0f;
+      control_point_marker.color.b = 0.0f;
+      path_markers.markers.push_back(control_point_marker);
+    }
+  }
+  m_pub_reconstructed_path_markers.publish(path_markers);
+}
+
 void bsplineGenerate::getDerive()
 {
   m_spline_derive = m_spline_ptr->derive();
@@ -142,4 +234,10 @@ std::vector<double> bsplineGenerate::evaluateDerive(double t)
   res_d.push_back(result[1]);
   res_d.push_back(result[2]);
   return res_d;
+}
+
+void bsplineGenerate::arrayConvertToPoint(int id, geometry_msgs::Point& point){
+  point.x = m_controlpts[3*id];
+  point.y = m_controlpts[3*id+1];
+  point.z = m_controlpts[3*id+2];
 }
