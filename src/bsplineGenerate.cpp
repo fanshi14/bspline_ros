@@ -136,9 +136,7 @@ void bsplineGenerate::controlPolygonDisplay(int mode){
   //std::cout << "[Display] Control points number: " << control_points_num << "\n";
   int id_cnt = 0;
   visualization_msgs::MarkerArray path_markers;
-  visualization_msgs::Marker control_point_marker, line_list_marker;
-  // line_array for display target ground truth future data, usually noted.
-  visualization_msgs::Marker line_array_target_gt_marker;
+  visualization_msgs::Marker control_point_marker, line_list_marker, triangle_list_marker;
   control_point_marker.ns = line_list_marker.ns = "control_polygon";
   control_point_marker.header.frame_id = line_list_marker.header.frame_id = std::string("/world");
   control_point_marker.header.stamp = line_list_marker.header.stamp = ros::Time().now();
@@ -147,21 +145,22 @@ void bsplineGenerate::controlPolygonDisplay(int mode){
   else
     control_point_marker.action = line_list_marker.action = visualization_msgs::Marker::DELETE;
 
-  line_array_target_gt_marker.header = line_list_marker.header;
-  line_array_target_gt_marker.action = line_list_marker.action;
-  line_array_target_gt_marker.ns = line_list_marker.ns;
+  triangle_list_marker.header = line_list_marker.header;
+  triangle_list_marker.action = line_list_marker.action;
+  triangle_list_marker.ns = line_list_marker.ns;
 
   control_point_marker.type = visualization_msgs::Marker::SPHERE;
   line_list_marker.type = visualization_msgs::Marker::LINE_LIST;
-  line_array_target_gt_marker.type = visualization_msgs::Marker::LINE_STRIP;
+  triangle_list_marker.type = visualization_msgs::Marker::TRIANGLE_LIST;
 
+  /* triangle edges */
   line_list_marker.id = id_cnt;
   ++id_cnt;
-  line_list_marker.scale.x = 0.06;
+  line_list_marker.scale.x = 0.07;
   line_list_marker.color.r = 0.0;
   line_list_marker.color.g = 1.0;
   line_list_marker.color.b = 0.0;
-  line_list_marker.color.a = 1.0;
+  line_list_marker.color.a = 0.3;
   geometry_msgs::Point pt;
   arrayConvertToPoint(0, pt);
   line_list_marker.points.push_back(pt);
@@ -179,6 +178,7 @@ void bsplineGenerate::controlPolygonDisplay(int mode){
   }
   path_markers.markers.push_back(line_list_marker);
 
+  /* triangle vertices */
   for (int i = 0; i < control_points_num; ++i){
     control_point_marker.id = id_cnt;
     ++id_cnt;
@@ -190,9 +190,9 @@ void bsplineGenerate::controlPolygonDisplay(int mode){
     control_point_marker.pose.orientation.z = 0.0;
     control_point_marker.pose.orientation.w = 1.0;
     if (i == 0 || i == control_points_num-1){
-      control_point_marker.scale.x = 0.5;
-      control_point_marker.scale.y = 0.5;
-      control_point_marker.scale.z = 0.5;
+      control_point_marker.scale.x = 0.3;
+      control_point_marker.scale.y = 0.3;
+      control_point_marker.scale.z = 0.3;
       control_point_marker.color.a = 1;
       control_point_marker.color.r = 0.0f;
       control_point_marker.color.g = 1.0f;
@@ -200,9 +200,9 @@ void bsplineGenerate::controlPolygonDisplay(int mode){
       path_markers.markers.push_back(control_point_marker);
     }
     else{
-      control_point_marker.scale.x = 0.25;
-      control_point_marker.scale.y = 0.25;
-      control_point_marker.scale.z = 0.25;
+      control_point_marker.scale.x = 0.2;
+      control_point_marker.scale.y = 0.2;
+      control_point_marker.scale.z = 0.2;
       control_point_marker.color.a = 1;
       control_point_marker.color.r = 0.0f;
       control_point_marker.color.g = 1.0f;
@@ -210,6 +210,29 @@ void bsplineGenerate::controlPolygonDisplay(int mode){
       path_markers.markers.push_back(control_point_marker);
     }
   }
+
+  /* triangle list */
+  triangle_list_marker.scale.x = 1.0;
+  triangle_list_marker.scale.y = 1.0;
+  triangle_list_marker.scale.z = 0.0;
+  triangle_list_marker.color.a = 0.3;
+  srand (time(NULL));
+  for (int i = 2; i < control_points_num; ++i){
+    triangle_list_marker.id = id_cnt;
+    ++id_cnt;
+    triangle_list_marker.color.r = rand() / (double)RAND_MAX * 1.0;
+    triangle_list_marker.color.g = rand() / (double)RAND_MAX * 1.0;
+    triangle_list_marker.color.b = rand() / (double)RAND_MAX * 1.0;
+    arrayConvertToPoint(i-2, pt);
+    triangle_list_marker.points.push_back(pt);
+    arrayConvertToPoint(i-1, pt);
+    triangle_list_marker.points.push_back(pt);
+    arrayConvertToPoint(i, pt);
+    triangle_list_marker.points.push_back(pt);
+    path_markers.markers.push_back(triangle_list_marker);
+    triangle_list_marker.points.clear();
+  }
+
   m_pub_reconstructed_path_markers.publish(path_markers);
 }
 

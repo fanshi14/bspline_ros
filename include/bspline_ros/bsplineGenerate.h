@@ -9,6 +9,8 @@
 #include <nav_msgs/Path.h>
 #include <visualization_msgs/Marker.h>
 #include <visualization_msgs/MarkerArray.h>
+#include <unistd.h>
+#include <stdlib.h>
 
 class bsplineGenerate
 {
