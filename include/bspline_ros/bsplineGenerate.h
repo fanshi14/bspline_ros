@@ -27,6 +27,7 @@ public:
   bool m_is_TsNone;
   float m_t0, m_tn;
   bool m_first_display_flag;
+  double m_segment_time;
 
   ros::NodeHandle m_nh;
   ros::Subscriber m_sub_path_grid_points;
@@ -44,4 +45,5 @@ public:
   std::vector<double> evaluateDerive(double t);
   void controlPolygonDisplay(int mode);
   void arrayConvertToPoint(int id, geometry_msgs::Point& point);
+  std::vector<double> evaluateYaw(double t);
 };

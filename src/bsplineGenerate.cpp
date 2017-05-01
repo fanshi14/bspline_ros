@@ -32,6 +32,31 @@ void bsplineGenerate::pathGridPointsCallback(const geometry_msgs::PolygonStamped
   bsplineParamInput(&msg_data);
 }
 
+std::vector<double> bsplineGenerate::evaluateYaw(double t)
+{
+  // todo: currently only 2d situation
+  // only consider 1s
+  int index = (int)(t / m_segment_time);
+  double ang0, ang1;
+  ang0 = atan2(m_controlpts[3*(index+1)+1] - m_controlpts[3*index+1], m_controlpts[3*(index+1)] - m_controlpts[3*index]);
+  ang1 = atan2(m_controlpts[3*(index+2)+1] - m_controlpts[3*(index+1)+1], m_controlpts[3*(index+2)] - m_controlpts[3*(index+1)]);
+  double d_ang = ang1 - ang0;
+  if (d_ang > 1.57) // pi/2
+    d_ang -= 3.14;
+  else if (d_ang < -1.57)
+    d_ang += 3.14;
+  double yaw_vel = d_ang / m_segment_time;
+  double cur_yaw = ang0 + yaw_vel * (t - index*m_segment_time);
+  if (cur_yaw > 3.14)
+    cur_yaw -= 3.14;
+  else if (cur_yaw < 0)
+    cur_yaw += 3.14;
+  std::vector<double> result;
+  result.push_back(yaw_vel);
+  result.push_back(cur_yaw);
+  return result;
+}
+
 void bsplineGenerate::bsplineParamInput(geometry_msgs::PolygonStamped* msg)
 {
   /* Init */
@@ -77,6 +102,9 @@ void bsplineGenerate::bsplineParamInput(geometry_msgs::PolygonStamped* msg)
     for (int i = 1; i <= m_n_controlpts-1-m_deg; ++i)
       m_knotpts[i+m_deg] = msg->polygon.points[2*i].x;
     m_spline_ptr->setKnots(m_knotpts);
+
+    // todo: here we assume segment time is fixed in every segment.
+    m_segment_time = m_knotpts[m_deg + 1] - m_knotpts[m_deg];
   }
 
   /* Set control points value */
