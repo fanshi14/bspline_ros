@@ -34,10 +34,7 @@ public:
   ros::Publisher m_pub_spline_path;
   ros::Publisher m_pub_reconstructed_path_markers;
 
-  bsplineGenerate(ros::NodeHandle nh, ros::NodeHandle nhp);
-  /* onInit() for tinyspline_ros_node or bsplineGenerateLibrary. */
-  void onInit();
-  void onInit(std::string spline_path_pub_topic_name);
+  bsplineGenerate(ros::NodeHandle nh, ros::NodeHandle nhp, std::string spline_path_pub_topic_name = std::string("/spline_path"));
   void pathGridPointsCallback(const bspline_ros::ControlPointsConstPtr& msg);
   void splinePathDisplay();
   void bsplineParamInput(bspline_ros::ControlPoints* msg);

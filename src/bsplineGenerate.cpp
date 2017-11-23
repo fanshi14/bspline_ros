@@ -1,26 +1,13 @@
 #include <bspline_ros/bsplineGenerate.h>
 
-bsplineGenerate::bsplineGenerate(ros::NodeHandle nh, ros::NodeHandle nhp){
+bsplineGenerate::bsplineGenerate(ros::NodeHandle nh, ros::NodeHandle nhp, std::string spline_path_pub_topic_name){
   m_nh = nh;
   m_nhp = nhp;
   m_debug = true;
-}
-
-void bsplineGenerate::onInit()
-{
-  m_sub_path_grid_points = m_nh.subscribe<bspline_ros::ControlPoints>("/path_gird_points", 1, &bsplineGenerate::pathGridPointsCallback, this);
-  m_pub_spline_path = m_nh.advertise<nav_msgs::Path>("spline_path", 1);
-  m_pub_reconstructed_path_markers = m_nh.advertise<visualization_msgs::MarkerArray>("reconstructed_path_markers", 1);
-
   m_first_display_flag = false;
-}
 
-
-void bsplineGenerate::onInit(std::string spline_path_pub_topic_name)
-{
   m_pub_spline_path = m_nh.advertise<nav_msgs::Path>(spline_path_pub_topic_name, 1);
   m_pub_reconstructed_path_markers = m_nh.advertise<visualization_msgs::MarkerArray>("reconstructed_path_markers", 1);
-  m_first_display_flag = false;
 }
 
 void bsplineGenerate::pathGridPointsCallback(const bspline_ros::ControlPointsConstPtr& msg)
