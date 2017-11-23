@@ -7,11 +7,14 @@ set(PACKAGE_DEPENDENCIES
   std_msgs
   geometry_msgs
   nav_msgs
+  message_generation
 )
 
 find_package(catkin REQUIRED COMPONENTS
   ${PACKAGE_DEPENDENCIES}
 )
+add_message_files(FILES ControlPoints.msg)
+generate_messages(DEPENDENCIES std_msgs)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 include(cmake/DownloadTinyspline.cmake)

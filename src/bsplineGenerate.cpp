@@ -1,147 +1,120 @@
 #include <bspline_ros/bsplineGenerate.h>
 
+bsplineGenerate::bsplineGenerate(ros::NodeHandle nh, ros::NodeHandle nhp){
+  m_nh = nh;
+  m_nhp = nhp;
+  m_debug = true;
+}
+
 void bsplineGenerate::onInit()
 {
-  ros::NodeHandle private_nh("~");
-  private_nh.param("spline_degree", m_default_deg, 2);
-  private_nh.param("is_ts_none",   m_is_TsNone, true);
-
-  m_sub_path_grid_points = m_nh.subscribe<geometry_msgs::PolygonStamped>("/path_gird_points", 1, &bsplineGenerate::pathGridPointsCallback, this);
+  m_sub_path_grid_points = m_nh.subscribe<bspline_ros::ControlPoints>("/path_gird_points", 1, &bsplineGenerate::pathGridPointsCallback, this);
   m_pub_spline_path = m_nh.advertise<nav_msgs::Path>("spline_path", 1);
   m_pub_reconstructed_path_markers = m_nh.advertise<visualization_msgs::MarkerArray>("reconstructed_path_markers", 1);
 
   m_first_display_flag = false;
-  m_spline_ptr = new tinyspline::BSpline(m_default_deg, 3, m_default_deg+1, TS_CLAMPED);
 }
 
 
-void bsplineGenerate::onInit(int degree, bool isTsNone, std::string spline_path_pub_topic_name)
+void bsplineGenerate::onInit(std::string spline_path_pub_topic_name)
 {
-  m_default_deg = degree;
-  m_is_TsNone = isTsNone;
   m_pub_spline_path = m_nh.advertise<nav_msgs::Path>(spline_path_pub_topic_name, 1);
   m_pub_reconstructed_path_markers = m_nh.advertise<visualization_msgs::MarkerArray>("reconstructed_path_markers", 1);
   m_first_display_flag = false;
-  m_spline_ptr = new tinyspline::BSpline(m_default_deg, 3, m_default_deg+1, TS_CLAMPED);
 }
 
-void bsplineGenerate::pathGridPointsCallback(const geometry_msgs::PolygonStampedConstPtr& msg)
+void bsplineGenerate::pathGridPointsCallback(const bspline_ros::ControlPointsConstPtr& msg)
 {
-  ROS_INFO("\nReceive control points from topic.\n");
-  geometry_msgs::PolygonStamped msg_data = *msg;
+  if (m_debug)
+    ROS_INFO("\nReceive control points from topic.\n");
+  bspline_ros::ControlPoints msg_data = *msg;
   bsplineParamInput(&msg_data);
 }
 
-std::vector<double> bsplineGenerate::evaluateYaw(double t)
-{
-  // todo: currently only 2d situation
-  // only consider 1s
-  int index = (int)(t / m_segment_time);
-  double ang0, ang1;
-  ang0 = atan2(m_controlpts[3*(index+1)+1] - m_controlpts[3*index+1], m_controlpts[3*(index+1)] - m_controlpts[3*index]);
-  ang1 = atan2(m_controlpts[3*(index+2)+1] - m_controlpts[3*(index+1)+1], m_controlpts[3*(index+2)] - m_controlpts[3*(index+1)]);
-  double d_ang = ang1 - ang0;
-  if (d_ang > 1.57) // pi/2
-    d_ang -= 3.14;
-  else if (d_ang < -1.57)
-    d_ang += 3.14;
-  double yaw_vel = d_ang / m_segment_time;
-  double cur_yaw = ang0 + yaw_vel * (t - index*m_segment_time);
-  if (cur_yaw > 3.14)
-    cur_yaw -= 3.14;
-  else if (cur_yaw < 0)
-    cur_yaw += 3.14;
-  std::vector<double> result;
-  result.push_back(yaw_vel);
-  result.push_back(cur_yaw);
-  return result;
-}
-
-void bsplineGenerate::bsplineParamInput(geometry_msgs::PolygonStamped* msg)
+void bsplineGenerate::bsplineParamInput(bspline_ros::ControlPoints* msg)
 {
   /* Init */
-  delete m_spline_ptr;
-  m_deg = m_default_deg;
-  //if (!m_controlpts.empty())
   if (m_first_display_flag){
     controlPolygonDisplay(0);
+    delete m_spline_ptr;
   }
   else
     m_first_display_flag = true;
 
-  m_n_controlpts = msg->polygon.points.size() / 2;
+  m_is_TsNone = !msg->is_uniform;
+  m_deg = msg->degree;
+  m_dim = msg->dim;
+  m_n_controlpts = msg->num;
   m_n_knots = m_n_controlpts + m_deg + 1;
-  //std::cout << "B-spline input control points number: " << m_n_controlpts << "\n";
+  if (m_debug)
+    std::cout << "B-spline input control points number: " << m_n_controlpts << "\n";
+
   if (m_n_controlpts <= m_deg){
     ROS_WARN("Control points is LESS than degree!");
-    std::cout << "Control point num: " << m_n_controlpts << ", degree: "
-              << m_deg << "\n";
-    m_deg = m_n_controlpts - 1;
+    if (m_debug)
+      std::cout << "Control point num: " << m_n_controlpts << ", degree: "
+                << m_deg << "\n";
+    return;
   }
 
   if (m_is_TsNone)
     m_spline_ptr = new tinyspline::BSpline(m_deg, // degree = order - 1
-                                   3, // dim of the data
-                                   m_n_controlpts, // control points >= degree+1
-                                   TS_NONE);
+                                           m_dim, // dim of the data
+                                           m_n_controlpts, // control points >= degree+1
+                                           TS_NONE);
   else
-    m_spline_ptr = new tinyspline::BSpline(m_deg, 3, m_n_controlpts, TS_CLAMPED);
+    m_spline_ptr = new tinyspline::BSpline(m_deg, m_dim, m_n_controlpts, TS_CLAMPED);
 
-  m_t0 = msg->polygon.points[0].x;
-  //m_tn = msg->polygon.points[2*(m_n_controlpts-m_deg-1)].x;
-  m_tn = msg->polygon.points[2*(m_n_controlpts-m_deg)].x;
-  // std::cout << "Time region: ["<< m_t0 << ", " << m_tn << "]\n";
+  m_t0 = msg->knots.data[0];
+  m_tn = msg->knots.data[m_n_knots - 1];
+  if (m_debug)
+    std::cout << "Time region: ["<< m_t0 << ", " << m_tn << "]\n";
 
+  m_knotpts = m_spline_ptr->knots();
   if (m_is_TsNone){
     /* Manually set knots value if TsNone */
-    m_knotpts = m_spline_ptr->knots();
-    for (int i = 0; i <= m_deg; ++i){
-      m_knotpts[i] = m_t0;
-      m_knotpts[m_n_knots-1-i] = m_tn;
+    for (int i = 0; i < m_n_knots; ++i){
+      m_knotpts[i] = msg->knots.data[i];
     }
-    for (int i = 1; i <= m_n_controlpts-1-m_deg; ++i)
-      m_knotpts[i+m_deg] = msg->polygon.points[2*i].x;
     m_spline_ptr->setKnots(m_knotpts);
-
-    // todo: here we assume segment time is fixed in every segment.
-    m_segment_time = m_knotpts[m_deg + 1] - m_knotpts[m_deg];
   }
 
   /* Set control points value */
   m_controlpts = m_spline_ptr->ctrlp();
-  for (int i = 0; i < m_n_controlpts; ++i){
-    m_controlpts[3*i] = msg->polygon.points[2*i+1].x;
-    m_controlpts[3*i+1] = msg->polygon.points[2*i+1].y;
-    m_controlpts[3*i+2] = msg->polygon.points[2*i+1].z;
-  }
+  for (int i = 0; i < m_n_controlpts * m_dim; ++i){
+    m_controlpts[i] = msg->control_pts.data[i];
 
   /* Debug */
-  // std::cout << "[check knots]: \n";
-  // for (int i = 0; i < m_n_controlpts+m_deg; ++i){
-  //   std::cout << m_knotpts[i] << ", ";
-  // }
-  // std::cout << "\n";
+  if (m_debug){
+    std::cout << "[check knots]: \n";
+    for (int i = 0; i < m_n_knots; ++i)
+        std::cout << m_knotpts[i] << ", ";
+    std::cout << "\n";
+  }
 
   m_spline_ptr->setCtrlp(m_controlpts);
 
   splinePathDisplay();
   controlPolygonDisplay(1);
-  // std::cout << "Spline display finished.\n";
+  if (m_debug)
+    std::cout << "Spline display finished.\n";
+  }
 }
 
 void bsplineGenerate::splinePathDisplay()
 {
-  m_spline_path.header.frame_id = std::string("/world");
-  m_spline_path.header.stamp = ros::Time().now();
+  nav_msgs::Path spline_path;
+  spline_path.header.frame_id = std::string("/world");
+  spline_path.header.stamp = ros::Time().now();
   float sample_gap = 0.02f;
-  m_spline_path.poses.clear();
+  spline_path.poses.clear();
   int n_sample;
   if (m_is_TsNone)
     n_sample = int((m_tn-m_t0) / sample_gap);
   else
     n_sample = int(1.0f / sample_gap);
   geometry_msgs::PoseStamped pose_stamped;
-  pose_stamped.header = m_spline_path.header;
+  pose_stamped.header = spline_path.header;
   pose_stamped.pose.orientation.x = 0.0f;
   pose_stamped.pose.orientation.y = 0.0f;
   pose_stamped.pose.orientation.z = 0.0f;
@@ -154,9 +127,9 @@ void bsplineGenerate::splinePathDisplay()
     pose_stamped.pose.position.x = result[0];
     pose_stamped.pose.position.y = result[1];
     pose_stamped.pose.position.z = result[2];
-    m_spline_path.poses.push_back(pose_stamped);
+    spline_path.poses.push_back(pose_stamped);
   }
-  m_pub_spline_path.publish(m_spline_path);
+  m_pub_spline_path.publish(spline_path);
 }
 
 void bsplineGenerate::controlPolygonDisplay(int mode){
