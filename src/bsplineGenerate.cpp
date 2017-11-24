@@ -181,19 +181,26 @@ void bsplineGenerate::controlPolygonDisplayInterface(int mode){
     control_point_marker.pose.orientation.z = 0.0;
     control_point_marker.pose.orientation.w = 1.0;
     if (i == 0 || i == control_points_num-1){
-      control_point_marker.scale.x = 0.3;
-      control_point_marker.scale.y = 0.3;
-      control_point_marker.scale.z = 0.3;
+      control_point_marker.scale.x = 0.1;
+      control_point_marker.scale.y = 0.1;
+      control_point_marker.scale.z = 0.1;
       control_point_marker.color.a = 1;
-      control_point_marker.color.r = 0.0f;
-      control_point_marker.color.g = 1.0f;
-      control_point_marker.color.b = 0.0f;
+      if (i == 0){
+        control_point_marker.color.r = 0.0f;
+        control_point_marker.color.g = 0.0f;
+        control_point_marker.color.b = 1.0f;
+      }
+      else{
+        control_point_marker.color.r = 1.0f;
+        control_point_marker.color.g = 0.0f;
+        control_point_marker.color.b = 0.0f;
+      }
       path_markers.markers.push_back(control_point_marker);
     }
     else{
-      control_point_marker.scale.x = 0.2;
-      control_point_marker.scale.y = 0.2;
-      control_point_marker.scale.z = 0.2;
+      control_point_marker.scale.x = 0.05;
+      control_point_marker.scale.y = 0.05;
+      control_point_marker.scale.z = 0.05;
       control_point_marker.color.a = 1;
       control_point_marker.color.r = 0.0f;
       control_point_marker.color.g = 1.0f;
