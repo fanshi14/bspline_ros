@@ -25,7 +25,7 @@ public:
   int m_dim;
   bool m_is_TsNone;
   float m_t0, m_tn;
-  bool m_first_display_flag;
+  bool m_polygon_display_flag;
   bool m_debug;
 
   ros::NodeHandle m_nh;
@@ -41,6 +41,7 @@ public:
   void getDerive();
   std::vector<double> evaluate(double t);
   std::vector<double> evaluateDerive(double t);
-  void controlPolygonDisplay(int mode);
+  void controlPolygonDisplay();
+  void controlPolygonDisplayInterface(int mode = 1);
   void arrayConvertToPoint(int id, geometry_msgs::Point& point);
 };

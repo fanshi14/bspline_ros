@@ -4,7 +4,7 @@ bsplineGenerate::bsplineGenerate(ros::NodeHandle nh, ros::NodeHandle nhp, std::s
   m_nh = nh;
   m_nhp = nhp;
   m_debug = true;
-  m_first_display_flag = false;
+  m_polygon_display_flag = false;
 
   m_pub_spline_path = m_nh.advertise<nav_msgs::Path>(spline_path_pub_topic_name, 1);
   m_pub_reconstructed_path_markers = m_nh.advertise<visualization_msgs::MarkerArray>("reconstructed_path_markers", 1);
@@ -21,12 +21,8 @@ void bsplineGenerate::pathGridPointsCallback(const bspline_ros::ControlPointsCon
 void bsplineGenerate::bsplineParamInput(bspline_ros::ControlPoints* msg)
 {
   /* Init */
-  if (m_first_display_flag){
-    controlPolygonDisplay(0);
+  if (m_spline_ptr)
     delete m_spline_ptr;
-  }
-  else
-    m_first_display_flag = true;
 
   m_is_TsNone = !msg->is_uniform;
   m_deg = msg->degree;
@@ -89,11 +85,6 @@ void bsplineGenerate::bsplineParamInput(bspline_ros::ControlPoints* msg)
   // }
 
   m_spline_ptr->setCtrlp(m_controlpts);
-
-  splinePathDisplay();
-  controlPolygonDisplay(1);
-  if (m_debug)
-    std::cout << "Spline display finished.\n";
 }
 
 void bsplineGenerate::splinePathDisplay()
@@ -124,7 +115,14 @@ void bsplineGenerate::splinePathDisplay()
   m_pub_spline_path.publish(spline_path);
 }
 
-void bsplineGenerate::controlPolygonDisplay(int mode){
+void bsplineGenerate::controlPolygonDisplay(){
+  if (m_polygon_display_flag)
+    controlPolygonDisplayInterface(0);
+  controlPolygonDisplayInterface(1);
+  m_polygon_display_flag = true;
+}
+
+void bsplineGenerate::controlPolygonDisplayInterface(int mode){
   int control_points_num = m_n_controlpts;
   //std::cout << "[Display] Control points number: " << control_points_num << "\n";
   int id_cnt = 0;
