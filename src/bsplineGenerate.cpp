@@ -27,6 +27,8 @@ void bsplineGenerate::bsplineParamInput(bspline_ros::ControlPoints* msg)
   m_is_TsNone = !msg->is_uniform;
   m_deg = msg->degree;
   m_dim = msg->dim;
+  if (m_dim < 3)
+    ROS_WARN("[bsplineGenerate] Input data dimension is less than 3, display function is infeasible.");
   m_n_controlpts = msg->num;
   m_n_knots = m_n_controlpts + m_deg + 1;
   if (m_debug)
@@ -89,6 +91,10 @@ void bsplineGenerate::bsplineParamInput(bspline_ros::ControlPoints* msg)
 
 void bsplineGenerate::splinePathDisplay()
 {
+  if (m_dim < 3){
+    ROS_ERROR("[bsplineGenerate] Input data dimension is less than 3, path display could not work.");
+    return;
+  }
   nav_msgs::Path spline_path;
   spline_path.header.frame_id = std::string("/world");
   spline_path.header.stamp = ros::Time().now();
@@ -116,6 +122,10 @@ void bsplineGenerate::splinePathDisplay()
 }
 
 void bsplineGenerate::controlPolygonDisplay(){
+  if (m_dim < 3){
+    ROS_ERROR("[bsplineGenerate] Input data dimension is less than 3, control polygon display could not work.");
+    return;
+  }
   if (m_polygon_display_flag)
     controlPolygonDisplayInterface(0);
   controlPolygonDisplayInterface(1);
@@ -173,9 +183,9 @@ void bsplineGenerate::controlPolygonDisplayInterface(int mode){
   for (int i = 0; i < control_points_num; ++i){
     control_point_marker.id = id_cnt;
     ++id_cnt;
-    control_point_marker.pose.position.x = m_controlpts[3*i];
-    control_point_marker.pose.position.y = m_controlpts[3*i+1];
-    control_point_marker.pose.position.z = m_controlpts[3*i+2];
+    control_point_marker.pose.position.x = m_controlpts[m_dim*i];
+    control_point_marker.pose.position.y = m_controlpts[m_dim*i+1];
+    control_point_marker.pose.position.z = m_controlpts[m_dim*i+2];
     control_point_marker.pose.orientation.x = 0.0;
     control_point_marker.pose.orientation.y = 0.0;
     control_point_marker.pose.orientation.z = 0.0;
@@ -246,9 +256,8 @@ std::vector<double> bsplineGenerate::evaluate(double t)
     t = (t - m_t0) / (m_tn - m_t0);
   std::vector<tinyspline::rational> result = m_spline_ptr->evaluate(t).result();
   std::vector<double> res_d;
-  res_d.push_back(result[0]);
-  res_d.push_back(result[1]);
-  res_d.push_back(result[2]);
+  for (int i = 0; i < result.size(); ++i)
+    res_d.push_back(result[i]);
   return res_d;
 }
 
@@ -258,17 +267,14 @@ std::vector<double> bsplineGenerate::evaluateDerive(double t)
   if (!m_is_TsNone)
     t = (t - m_t0) / (m_tn - m_t0);
   std::vector<tinyspline::rational> result = m_spline_derive.evaluate(t).result();
-  for (int i = 0; i < result.size(); ++i)
-    result[i] = result[i] / (m_tn - m_t0);
   std::vector<double> res_d;
-  res_d.push_back(result[0]);
-  res_d.push_back(result[1]);
-  res_d.push_back(result[2]);
+  for (int i = 0; i < result.size(); ++i)
+    res_d.push_back(result[i] / (m_tn - m_t0));
   return res_d;
 }
 
 void bsplineGenerate::arrayConvertToPoint(int id, geometry_msgs::Point& point){
-  point.x = m_controlpts[3*id];
-  point.y = m_controlpts[3*id+1];
-  point.z = m_controlpts[3*id+2];
+  point.x = m_controlpts[m_dim*id];
+  point.y = m_controlpts[m_dim*id+1];
+  point.z = m_controlpts[m_dim*id+2];
 }
