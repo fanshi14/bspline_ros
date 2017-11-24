@@ -51,14 +51,8 @@ void bsplineGenerate::bsplineParamInput(bspline_ros::ControlPoints* msg)
   else
     m_spline_ptr = new tinyspline::BSpline(m_deg, m_dim, m_n_controlpts, TS_CLAMPED);
 
-  if (msg->knots.data.empty()){
-    m_t0 = 0.0;
-    m_tn = 1.0;
-  }
-  else{
-    m_t0 = msg->knots.data[0];
-    m_tn = msg->knots.data[m_n_knots - 1];
-  }
+  m_t0 = msg->start_time;
+  m_tn = msg->end_time;
   if (m_debug)
     std::cout << "Time region: ["<< m_t0 << ", " << m_tn << "]\n";
 
@@ -107,13 +101,10 @@ void bsplineGenerate::splinePathDisplay()
   nav_msgs::Path spline_path;
   spline_path.header.frame_id = std::string("/world");
   spline_path.header.stamp = ros::Time().now();
-  float sample_gap = 0.02f;
+  float sample_gap;
   spline_path.poses.clear();
-  int n_sample;
-  if (m_is_TsNone)
-    n_sample = int((m_tn-m_t0) / sample_gap);
-  else
-    n_sample = int(1.0f / sample_gap);
+  int n_sample = 50;
+  sample_gap = (m_tn-m_t0) / n_sample;
   geometry_msgs::PoseStamped pose_stamped;
   pose_stamped.header = spline_path.header;
   pose_stamped.pose.orientation.x = 0.0f;
@@ -124,7 +115,7 @@ void bsplineGenerate::splinePathDisplay()
   //tinyspline::BSpline beziers = m_spline_ptr->derive().toBeziers();
 
   for (int i = 0; i <= n_sample; ++i){
-    std::vector<tinyspline::rational> result = m_spline_ptr->evaluate(i*sample_gap).result();
+    std::vector<double> result = evaluate(m_t0 + i*sample_gap);
     pose_stamped.pose.position.x = result[0];
     pose_stamped.pose.position.y = result[1];
     pose_stamped.pose.position.z = result[2];
@@ -245,6 +236,9 @@ void bsplineGenerate::getDerive()
 
 std::vector<double> bsplineGenerate::evaluate(double t)
 {
+  /* uniform mode the total time is default from 0 to 1 */
+  if (!m_is_TsNone)
+    t = (t - m_t0) / (m_tn - m_t0);
   std::vector<tinyspline::rational> result = m_spline_ptr->evaluate(t).result();
   std::vector<double> res_d;
   res_d.push_back(result[0]);
@@ -255,7 +249,12 @@ std::vector<double> bsplineGenerate::evaluate(double t)
 
 std::vector<double> bsplineGenerate::evaluateDerive(double t)
 {
+  /* uniform mode the total time is default from 0 to 1 */
+  if (!m_is_TsNone)
+    t = (t - m_t0) / (m_tn - m_t0);
   std::vector<tinyspline::rational> result = m_spline_derive.evaluate(t).result();
+  for (int i = 0; i < result.size(); ++i)
+    result[i] = result[i] / (m_tn - m_t0);
   std::vector<double> res_d;
   res_d.push_back(result[0]);
   res_d.push_back(result[1]);
