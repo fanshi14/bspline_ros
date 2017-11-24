@@ -43,7 +43,6 @@ void bsplineGenerate::bsplineParamInput(bspline_ros::ControlPoints* msg)
                 << m_deg << "\n";
     return;
   }
-
   if (m_is_TsNone)
     m_spline_ptr = new tinyspline::BSpline(m_deg, // degree = order - 1
                                            m_dim, // dim of the data
@@ -52,8 +51,14 @@ void bsplineGenerate::bsplineParamInput(bspline_ros::ControlPoints* msg)
   else
     m_spline_ptr = new tinyspline::BSpline(m_deg, m_dim, m_n_controlpts, TS_CLAMPED);
 
-  m_t0 = msg->knots.data[0];
-  m_tn = msg->knots.data[m_n_knots - 1];
+  if (msg->knots.data.empty()){
+    m_t0 = 0.0;
+    m_tn = 1.0;
+  }
+  else{
+    m_t0 = msg->knots.data[0];
+    m_tn = msg->knots.data[m_n_knots - 1];
+  }
   if (m_debug)
     std::cout << "Time region: ["<< m_t0 << ", " << m_tn << "]\n";
 
@@ -66,18 +71,28 @@ void bsplineGenerate::bsplineParamInput(bspline_ros::ControlPoints* msg)
     m_spline_ptr->setKnots(m_knotpts);
   }
 
+  if (m_debug){
+    std::cout << "Start position: ";
+    for (int i = 0; i < m_dim; ++i)
+      std::cout << msg->control_pts.data[i] << ", ";
+    std::cout << "\nEnd position: ";
+    for (int i = 0; i < m_dim; ++i)
+      std::cout << msg->control_pts.data[i + (m_n_controlpts-1) * m_dim] << ", ";
+    std::cout << "\n";
+  }
+
   /* Set control points value */
   m_controlpts = m_spline_ptr->ctrlp();
-  for (int i = 0; i < m_n_controlpts * m_dim; ++i){
+  for (int i = 0; i < m_n_controlpts * m_dim; ++i)
     m_controlpts[i] = msg->control_pts.data[i];
 
   /* Debug */
-  if (m_debug){
-    std::cout << "[check knots]: \n";
-    for (int i = 0; i < m_n_knots; ++i)
-        std::cout << m_knotpts[i] << ", ";
-    std::cout << "\n";
-  }
+  // if (m_debug){
+  //   std::cout << "[check knots]: \n";
+  //   for (int i = 0; i < m_n_knots; ++i)
+  //       std::cout << m_knotpts[i] << ", ";
+  //   std::cout << "\n";
+  // }
 
   m_spline_ptr->setCtrlp(m_controlpts);
 
@@ -85,7 +100,6 @@ void bsplineGenerate::bsplineParamInput(bspline_ros::ControlPoints* msg)
   controlPolygonDisplay(1);
   if (m_debug)
     std::cout << "Spline display finished.\n";
-  }
 }
 
 void bsplineGenerate::splinePathDisplay()
