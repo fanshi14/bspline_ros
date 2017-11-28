@@ -251,6 +251,10 @@ void bsplineGenerate::getDerive()
 
 std::vector<double> bsplineGenerate::evaluate(double t)
 {
+  if (t > m_tn)
+    t = m_tn;
+  else if (t < m_t0)
+    t = m_t0;
   /* uniform mode the total time is default from 0 to 1 */
   if (!m_is_TsNone)
     t = (t - m_t0) / (m_tn - m_t0);
@@ -263,6 +267,10 @@ std::vector<double> bsplineGenerate::evaluate(double t)
 
 std::vector<double> bsplineGenerate::evaluateDerive(double t)
 {
+  if (t > m_tn)
+    t = m_tn;
+  else if (t < m_t0)
+    t = m_t0;
   /* uniform mode the total time is default from 0 to 1 */
   if (!m_is_TsNone)
     t = (t - m_t0) / (m_tn - m_t0);
