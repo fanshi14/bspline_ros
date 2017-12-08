@@ -1,10 +1,11 @@
 #include <bspline_ros/bsplineGenerate.h>
 
-bsplineGenerate::bsplineGenerate(ros::NodeHandle nh, ros::NodeHandle nhp, std::string spline_path_pub_topic_name){
+bsplineGenerate::bsplineGenerate(ros::NodeHandle nh, ros::NodeHandle nhp, std::string spline_path_pub_topic_name, std::string path_frame_id){
   m_nh = nh;
   m_nhp = nhp;
   m_debug = true;
   m_polygon_display_flag = false;
+  m_path_frame_id = path_frame_id;
 
   m_pub_spline_path = m_nh.advertise<nav_msgs::Path>(spline_path_pub_topic_name, 1);
   m_pub_reconstructed_path_markers = m_nh.advertise<visualization_msgs::MarkerArray>("reconstructed_path_markers", 1);
@@ -96,7 +97,7 @@ void bsplineGenerate::splinePathDisplay()
     return;
   }
   nav_msgs::Path spline_path;
-  spline_path.header.frame_id = std::string("/world");
+  spline_path.header.frame_id = m_path_frame_id;
   spline_path.header.stamp = ros::Time().now();
   float sample_gap;
   spline_path.poses.clear();
@@ -139,7 +140,7 @@ void bsplineGenerate::controlPolygonDisplayInterface(int mode){
   visualization_msgs::MarkerArray path_markers;
   visualization_msgs::Marker control_point_marker, line_list_marker, triangle_list_marker;
   control_point_marker.ns = line_list_marker.ns = "control_polygon";
-  control_point_marker.header.frame_id = line_list_marker.header.frame_id = std::string("/world");
+  control_point_marker.header.frame_id = line_list_marker.header.frame_id = m_path_frame_id;
   control_point_marker.header.stamp = line_list_marker.header.stamp = ros::Time().now();
   if (mode == 1)
     control_point_marker.action = line_list_marker.action = visualization_msgs::Marker::ADD;

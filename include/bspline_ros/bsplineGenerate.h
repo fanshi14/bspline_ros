@@ -27,6 +27,7 @@ public:
   float m_t0, m_tn;
   bool m_polygon_display_flag;
   bool m_debug;
+  std::string m_path_frame_id;
 
   ros::NodeHandle m_nh;
   ros::NodeHandle m_nhp;
@@ -34,7 +35,8 @@ public:
   ros::Publisher m_pub_spline_path;
   ros::Publisher m_pub_reconstructed_path_markers;
 
-  bsplineGenerate(ros::NodeHandle nh, ros::NodeHandle nhp, std::string spline_path_pub_topic_name = std::string("/spline_path"));
+  bsplineGenerate(ros::NodeHandle nh, ros::NodeHandle nhp, std::string spline_path_pub_topic_name = std::string("/spline_path"),
+                  std::string path_frame = std::string("/world"));
   void pathGridPointsCallback(const bspline_ros::ControlPointsConstPtr& msg);
   void splinePathDisplay();
   void bsplineParamInput(bspline_ros::ControlPoints* msg);
